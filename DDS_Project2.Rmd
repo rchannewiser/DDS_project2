@@ -1,0 +1,393 @@
+---
+title: "DDS_project2"
+author: "Rohit C"
+date: "8/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(reshape2)
+library(car)
+library(leaps)
+library(class)
+library(caret)
+library(e1071)
+library(ISLR)
+library(tidyr)
+```
+
+## Read Data
+
+
+
+```{r}
+attr_data <- read.csv('~/Downloads/wiser/MSDS_6306_Doing-Data-Science/Unit 14 and 15 Case Study 2/CaseStudy2-data.csv',header = TRUE)
+
+head(attr_data)
+summary(attr_data)
+```
+
+## Continious variables
+
+You can also embed plots, for example:
+
+```{r}
+attr_data %>% ggplot(aes(x = log(Age), fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("Age") + coord_flip()
+
+attr_data %>% ggplot(aes(x = Age, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("Age") + coord_flip()
+
+attr_data %>% ggplot(aes(x = DailyRate, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("DailyRate") + coord_flip()
+
+attr_data %>% ggplot(aes(x = DistanceFromHome, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("DistanceFromHome") + coord_flip()
+
+attr_data %>% ggplot(aes(x = HourlyRate, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("HourlyRate") + coord_flip()
+
+attr_data %>% ggplot(aes(x = MonthlyRate, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("MonthlyRate") + coord_flip()
+
+attr_data %>% ggplot(aes(x = MonthlyIncome, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("MonthlyRate") + coord_flip()
+
+attr_data %>% ggplot(aes(x = NumCompaniesWorked, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("NumCompaniesWorked") + coord_flip()
+
+attr_data %>% ggplot(aes(x = PercentSalaryHike, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("PercentSalaryHike") + coord_flip()
+
+attr_data %>% ggplot(aes(x = TotalWorkingYears, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("TotalWorkingYears") + coord_flip()
+
+attr_data %>% ggplot(aes(x = YearsAtCompany, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("YearsAtCompany") + coord_flip()
+
+attr_data %>% ggplot(aes(x = YearsInCurrentRole, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("YearsInCurrentRole") + coord_flip()
+
+attr_data %>% ggplot(aes(x = YearsSinceLastPromotion, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("YearsSinceLastPromotion") + coord_flip()
+
+attr_data %>% ggplot(aes(x = YearsWithCurrManager, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("YearsWithCurrManager") + coord_flip()
+
+attr_data %>% ggplot(aes(x = TrainingTimesLastYear, fill = Attrition)) + geom_boxplot() + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + facet_wrap(~ attr_data$Attrition) + xlab("TrainingTimesLastYear") + coord_flip()
+
+
+```
+
+## Factor variables
+```{r}
+attr_data %>% group_by(Department, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = Department, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(BusinessTravel, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = BusinessTravel, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(Education, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = Education, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(EducationField, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = EducationField, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(EnvironmentSatisfaction, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = EnvironmentSatisfaction, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(Gender, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = Gender, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(JobInvolvement, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = JobInvolvement, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(JobLevel, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = JobLevel, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(JobRole, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = JobRole, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(JobSatisfaction, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = JobSatisfaction, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(MaritalStatus, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = MaritalStatus, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(OverTime, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = OverTime, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(PerformanceRating, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = PerformanceRating, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(RelationshipSatisfaction, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = RelationshipSatisfaction, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(StockOptionLevel, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = StockOptionLevel, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+attr_data %>% group_by(WorkLifeBalance, Attrition) %>% summarise(count = n()) %>% mutate(Perc = (count/sum(count))) %>% 
+  ggplot(aes(x = WorkLifeBalance, y = Perc, fill = Attrition)) + geom_bar(stat = "identity")
+
+```
+
+## Creating a new data set with relevant variables
+
+```{r}
+
+attr_data %>% select(Attrition ,Age, DistanceFromHome, NumCompaniesWorked,TotalWorkingYears, YearsInCurrentRole, YearsSinceLastPromotion, YearsWithCurrManager,YearsAtCompany, BusinessTravel, EducationField, EnvironmentSatisfaction, JobInvolvement, JobLevel, JobRole, MaritalStatus, OverTime, StockOptionLevel, WorkLifeBalance, MonthlyIncome) -> attr_data_new
+
+```
+
+## Coding text variables
+
+```{r}
+#head(attr_data_new)
+
+attr_data_new %>% mutate(Marital_flag = ifelse(MaritalStatus == 'Single',2,ifelse(MaritalStatus == 'Married',1,0))) -> attr_data_new
+attr_data_new %>% mutate(overtime_flag = ifelse(OverTime == 'Yes',1,0)) -> attr_data_new
+attr_data_new %>% mutate(BusinessTravel_flag = ifelse(BusinessTravel == 'Travel_Frequently',2,ifelse(BusinessTravel == 'Travel_Rarely',1,0))) -> attr_data_new
+
+attr_data_new %>% mutate(jobrole_flag = ifelse(JobRole == "Sales Representative" ,2,ifelse(JobRole == 'Sales Executive'| JobRole == 'Human Resources' | JobRole == 'Research Scientist'| JobRole == 'Laboratory Technician',1,0))) -> attr_data_new
+
+unique(attr_data_new$JobRole)
+
+#head(attr_data_new)
+attr_data_new %>% mutate(z_Age = scale(attr_data_new$Age)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_DistanceFromHome = scale(attr_data_new$DistanceFromHome)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_NumCompaniesWorked = scale(attr_data_new$NumCompaniesWorked)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_TotalWorkingYears = scale(attr_data_new$TotalWorkingYears)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_YearsInCurrentRole = scale(attr_data_new$YearsInCurrentRole)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_YearsSinceLastPromotion = scale(attr_data_new$YearsSinceLastPromotion)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_YearsWithCurrManager = scale(attr_data_new$YearsWithCurrManager)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_YearsAtCompany = scale(attr_data_new$YearsAtCompany)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_BusinessTravel_flag = scale(attr_data_new$BusinessTravel_flag)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_overtime_flag = scale(attr_data_new$overtime_flag)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_Marital_flag = scale(attr_data_new$Marital_flag)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_JobInvolvement = scale(attr_data_new$JobInvolvement)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_JobLevel = scale(attr_data_new$JobLevel)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_StockOptionLevel = scale(attr_data_new$StockOptionLevel)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_EnvironmentSatisfaction = scale(attr_data_new$EnvironmentSatisfaction)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_WorkLifeBalance = scale(attr_data_new$WorkLifeBalance)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_jobrole_flag = scale(attr_data_new$jobrole_flag)[,1]) -> attr_data_new
+attr_data_new %>% mutate(z_MonthlyIncome = scale(attr_data_new$MonthlyIncome)[,1]) -> attr_data_new
+
+# attr_data_new %>% select(Attrition ,z_Age, z_DistanceFromHome, z_NumCompaniesWorked,z_TotalWorkingYears, z_YearsInCurrentRole, z_EnvironmentSatisfaction, z_JobInvolvement, z_JobLevel,  z_WorkLifeBalance, z_Marital_flag, z_overtime_flag, z_BusinessTravel_flag) -> attr_for_knn
+
+attr_data_new %>% select(Attrition ,z_Age, z_DistanceFromHome, z_NumCompaniesWorked, z_YearsInCurrentRole, z_EnvironmentSatisfaction, z_JobInvolvement, z_JobLevel,  z_WorkLifeBalance, z_Marital_flag, z_overtime_flag, z_BusinessTravel_flag, z_jobrole_flag,z_MonthlyIncome ) -> attr_for_knn
+
+attr_data_new %>% select(Attrition ,Age, DistanceFromHome, NumCompaniesWorked, YearsInCurrentRole, EnvironmentSatisfaction, JobInvolvement, JobLevel,  WorkLifeBalance, Marital_flag, overtime_flag, BusinessTravel_flag, JobRole, MonthlyIncome ) -> attr_for_nb
+
+head(attr_for_knn)
+
+```
+## Train and Test
+```{r}
+
+attr_for_knn.y <- subset(attr_for_knn, Attrition == "Yes")
+attr_for_knn.n <- subset(attr_for_knn, Attrition == "No")
+
+set.seed(5)
+index.yes<-sample(1:dim(attr_for_knn.y)[1],floor(0.9*dim(attr_for_knn.y)),replace=F)
+train.yes<-attr_for_knn.y[index.yes,]
+test.yes<-attr_for_knn.y[-index.yes,]
+
+index.no<-sample(1:dim(attr_for_knn.n)[1],floor(0.5*dim(attr_for_knn.n)),replace=F)
+train.no<-attr_for_knn.n[index.no,]
+test.no<-attr_for_knn.n[-index.no,]
+
+attr.train <- rbind(train.no, train.yes)
+attr.test <- rbind(test.no, test.yes)
+
+
+
+#set.seed(5)
+#index<-sample(1:dim(attr_for_knn)[1],floor(0.7*dim(attr_for_knn)),replace=F)
+#attr.train<-attr_for_knn[index,]
+#attr.test<-attr_for_knn[-index,]
+
+```
+
+
+## Running KNN
+```{r}
+
+
+attr_accs = data.frame(accuracy = numeric(30), k = numeric(30), sensitivity = numeric(30), specificity = numeric(30))
+
+for(i in 1:30)
+{
+  classifications = knn(attr.train[,-1],attr.test[,-1],attr.train$Attrition, prob = TRUE, k = i)
+
+  CM = confusionMatrix(table(classifications,attr.test$Attrition))
+  attr_accs$accuracy[i] = CM$overall[1]
+  attr_accs$sensitivity[i] = CM$byClass[1]
+  attr_accs$specificity[i] = CM$byClass[2]
+  attr_accs$k[i] = i
+}
+
+
+```
+
+
+
+## Plotting
+
+```{r}
+
+attr_accs <- melt(attr_accs, id.vars="k", measure.vars= c("accuracy","sensitivity","specificity"))
+
+ggplot(data=attr_accs, aes(x=k, y=value, group = variable, colour = variable)) +
+    geom_line() +
+    geom_point( size=4, shape=21, fill="white") +
+    ggtitle('KNN stats')
+```
+# KNN results do not look satisfactory
+
+## For NaiveBayes
+```{r}
+
+
+attr_accs2 = data.frame(accuracy = numeric(100), k = numeric(100), sensitivity = numeric(100), specificity = numeric(100))
+
+attr_for_nb.y <- subset(attr_for_nb, Attrition == "Yes")
+attr_for_nb.n <- subset(attr_for_nb, Attrition == "No")
+   
+for(i in 1:100)
+{
+  
+
+#index<-sample(1:dim(attr_for_knn)[1],floor(0.5*dim(attr_for_knn)),replace=F)
+#attr.train<-attr_for_knn[index,]
+#attr.test<-attr_for_knn[-index,]
+index.yes<-sample(1:dim(attr_for_nb.y)[1],floor(0.9*dim(attr_for_nb.y)),replace=F)
+train.yes<-attr_for_nb.y[index.yes,]
+test.yes<-attr_for_nb.y[-index.yes,]
+
+index.no<-sample(1:dim(attr_for_nb.n)[1],floor(0.5*dim(attr_for_nb.n)),replace=F)
+train.no<-attr_for_nb.n[index.no,]
+test.no<-attr_for_nb.n[-index.no,]
+
+attr.train <- rbind(train.no, train.yes)
+attr.test <- rbind(test.no, test.yes)
+  
+  model_attr = naiveBayes(as.factor(Attrition)~.,data = attr.train)
+  table(predict(model_attr,attr.test[,-1]),attr.test$Attrition)
+  CM = confusionMatrix(table(predict(model_attr,attr.test[,-1]),attr.test$Attrition))
+  attr_accs2$accuracy[i] = CM$overall[1]
+  attr_accs2$sensitivity[i] = CM$byClass[1]
+  attr_accs2$specificity[i] = CM$byClass[2]
+  attr_accs2$k[i] = i
+}
+
+mean(attr_accs2$accuracy)
+mean(attr_accs2$sensitivity)
+mean(attr_accs2$specificity)
+
+attr_accs2 <- melt(attr_accs2, id.vars="k", measure.vars= c("accuracy","sensitivity","specificity"))
+
+ggplot(data=attr_accs2, aes(x=k, y=value, group = variable, colour = variable)) +
+    geom_line() +
+    geom_point( size=4, shape=21, fill="white") +
+    ggtitle('NB stats')
+
+
+
+```
+## Attrition Prediction
+
+```{r}
+attr_data_nb <- read.csv('~/Downloads/wiser/MSDS_6306_Doing-Data-Science/Unit 14 and 15 Case Study 2/CaseStudy2CompSet No Attrition.csv',header = TRUE)
+head(attr_data_nb)
+summary(attr_data_nb)
+
+attr_data_nb %>% mutate(Marital_flag = ifelse(MaritalStatus == 'Single',2,ifelse(MaritalStatus == 'Married',1,0))) -> attr_data_nb
+attr_data_nb %>% mutate(overtime_flag = ifelse(OverTime == 'Yes',1,0)) -> attr_data_nb
+attr_data_nb %>% mutate(BusinessTravel_flag = ifelse(BusinessTravel == 'Travel_Frequently',2,ifelse(BusinessTravel == 'Travel_Rarely',1,0))) -> attr_data_nb
+
+attr_data_nb %>% select(Age, DistanceFromHome, NumCompaniesWorked, YearsInCurrentRole, EnvironmentSatisfaction, JobInvolvement, JobLevel,  WorkLifeBalance, Marital_flag, overtime_flag, BusinessTravel_flag, JobRole, MonthlyIncome ) -> attr_for_nb_pred
+
+model_attr_nb = naiveBayes(as.factor(Attrition)~.,data = attr_for_nb)
+
+predict(model_attr_nb,attr_for_nb_pred,type="class") -> attr_nb_pred
+
+merge(data.frame(attr_nb_pred), attr_data_nb,by = 0) %>% select(ID, attr_nb_pred) -> attr_nb_op
+write.csv(attr_nb_op,"~/Documents/CaseStudy2predictions_channe_attrition.csv",row.names=FALSE)
+
+
+```
+
+## For Monthly income
+```{r}
+
+cor(subset(attr_data, select=-c(Attrition,BusinessTravel,Department, EducationField,Gender,JobRole,MaritalStatus, EmployeeCount,EmployeeNumber,Over18,OverTime))) -> df_cortest 
+melt(df_cortest) %>% ggplot(aes(x=Var1, y = Var2, fill = value)) + geom_tile(color = "white")+scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation") + theme_minimal()+ theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+coord_fixed()
+
+attr_data %>% ggplot(aes(x = Age, y = MonthlyIncome)) + geom_point() + geom_smooth(method = 'lm')
+attr_data %>% ggplot(aes(x = BusinessTravel, y = MonthlyIncome)) + geom_point() + geom_smooth(method = 'lm')
+
+df_names <- attr_data %>% gather(-c(MonthlyIncome,Attrition,ID,EmployeeCount,EmployeeNumber,Over18,StandardHours), key="var", value = "value")
+
+ggplot(df_names, aes(x = value, y = MonthlyIncome)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~var, scales = "free") 
+
+attach(attr_data)
+lm_model <- lm(formula = MonthlyIncome ~ JobLevel+ JobRole + TotalWorkingYears + PerformanceRating)
+summary(lm_model)
+lm_model_rs = resid(lm_model)
+plot(attr_data$MonthlyIncome,lm_model_rs)
+abline(0,0)
+
+RSS <- c(crossprod(lm_model$residuals))
+MSE <- RSS / length(lm_model$residuals)
+RMSE <- sqrt(MSE)
+print("RMSE for LM:")
+RMSE
+```
+ 
+## Trying LM forward selection 
+```{r}
+set.seed(5)
+index<-sample(1:dim(attr_data)[1],floor(0.7*dim(attr_data)),replace=F)
+attr_lm.train<-attr_data[index,]
+attr_lm.test<-attr_data[-index,]
+
+reg.fwd=regsubsets(MonthlyIncome~.,data=subset(attr_lm.train, select=-c(Attrition,ID,EmployeeCount,EmployeeNumber,Over18,StandardHours)),method="forward",nvmax=100)
+summary(reg.fwd)
+
+predict.regsubsets =function (object , newdata ,id ,...){
+  form=as.formula (object$call [[2]])
+  mat=model.matrix(form ,newdata )
+  coefi=coef(object ,id=id)
+  xvars=names(coefi)
+  mat[,xvars]%*%coefi
+}
+testASE<-c()
+for (i in 1:23){
+  predictions<-predict.regsubsets(object=reg.fwd,newdata=subset(attr_lm.test, select=-c(Attrition,ID,EmployeeCount,EmployeeNumber,Over18,StandardHours)),id=i)
+  test_pred <- merge(x = predictions, y = attr_lm.test , by = 0)
+  testASE[i]<-mean((test_pred$MonthlyIncome-test_pred$V1)^2)
+}
+#ASE Plot for Forward
+par(mfrow=c(1,1))
+plot(1:23,testASE,type="l",xlab="# of predictors",ylab="test vs train ASE")
+index<-which(testASE==min(testASE))
+points(index,testASE[index],col="red",pch=10)
+rss<-summary(reg.fwd)$rss
+lines(1:43,rss/261,lty=3,col="blue") 
+
+length(rss)
+```
+
+## Importing data for prediction
+```{r}
+attr_data_lm <- read.csv('~/Downloads/wiser/MSDS_6306_Doing-Data-Science/Unit 14 and 15 Case Study 2/CaseStudy2CompSet No Salary.csv',header = TRUE)
+
+head(attr_data_lm)
+summary(attr_data_lm)
+
+attr_data_lm %>% select(ID,Age, JobLevel, JobRole , TotalWorkingYears , PerformanceRating) -> attr_data_lm_pred
+
+lm_model_train <- lm(formula = MonthlyIncome ~ Age + JobLevel+ JobRole + TotalWorkingYears + PerformanceRating, data =  attr_lm.train)
+summary(lm_model_train)
+predict(lm_model,attr_data_lm_pred,interval="confidence", level = 0.95) -> attr_lm_pred
+
+merge(data.frame(attr_lm_pred), attr_data_lm_pred,by = 0) %>% select(ID, fit) -> attr_lm_op
+write.csv(attr_lm_op,"~/Documents/CaseStudy2predictions_channe_salary.csv",row.names=FALSE)
+
+```
+
+
+
+
+
+
